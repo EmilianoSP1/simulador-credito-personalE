@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Crédito Personal · Cotizador inteligente</title>
+  <meta name="description" content="Simulador de crédito personal con amortización constante, interés sobre saldo insoluto e IVA. Cotiza tu financiamiento al instante.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 17l5-5 4 4 8-9"></path>
+          <path d="M21 7v5h-5"></path>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <strong>Nimbo</strong>
+        <span>Crédito Personal</span>
+      </div>
+    </div>
+    <p class="brand-tag">Cotizador de amortización constante</p>
+  </header>
+
+  <main class="layout">
+    <!-- Panel de captura -->
+    <section class="panel panel--form" aria-labelledby="form-title">
+      <div class="panel-head">
+        <p class="eyebrow">Parámetros</p>
+        <h1 id="form-title">Diseña tu financiamiento</h1>
+        <p class="lede">Modelo de pago a capital fijo, con interés ordinario sobre saldo insoluto e IVA aplicado a los intereses.</p>
+      </div>
+
+      <form id="credit-form" novalidate>
+        <div class="field">
+          <label for="nombre">Nombre del cliente</label>
+          <div class="control">
+            <input type="text" id="nombre" value="" placeholder="Opcional" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="monto">Monto del crédito</label>
+          <div class="control control--money">
+            <span class="prefix">$</span>
+            <input type="number" id="monto" inputmode="numeric" value="150000" min="1000" step="1000" required>
+          </div>
+          <input type="range" id="monto-range" class="slider" min="5000" max="500000" step="5000" value="150000" aria-label="Ajustar monto">
+        </div>
+
+        <div class="field">
+          <label for="tasa">Tasa de interés anual ordinaria</label>
+          <div class="control control--suffix">
+            <input type="number" id="tasa" value="34" min="0" step="0.1" required>
+            <span class="suffix">%</span>
+          </div>
+          <input type="range" id="tasa-range" class="slider" min="0" max="60" step="0.5" value="34" aria-label="Ajustar tasa">
+        </div>
+
+        <div class="field">
+          <label for="plazo">Plazo del financiamiento</label>
+          <div class="segmented" role="group" aria-label="Plazo en meses">
+            <button type="button" class="seg" data-plazo="12">12</button>
+            <button type="button" class="seg" data-plazo="24">24</button>
+            <button type="button" class="seg" data-plazo="36">36</button>
+            <button type="button" class="seg is-active" data-plazo="48">48</button>
+            <button type="button" class="seg" data-plazo="60">60</button>
+          </div>
+          <input type="hidden" id="plazo" value="48">
+          <span class="hint">meses</span>
+        </div>
+
+        <div class="field field--switch">
+          <div class="switch-text">
+            <label for="comision-toggle">Comisión por apertura</label>
+            <span class="hint">Se financia junto con el capital, con IVA incluido.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="comision-toggle">
+            <span class="track" aria-hidden="true"></span>
+          </label>
+        </div>
+
+        <div class="field field--inline" id="comision-row" hidden>
+          <label for="comision">Porcentaje de comisión</label>
+          <div class="control control--suffix">
+            <input type="number" id="comision" value="1" min="0" step="0.1">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-calcular" class="btn-primary">
+          <span>Calcular cotización</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+        </button>
+      </form>
+    </section>
+
+    <!-- Panel de resultados -->
+    <section class="panel panel--results" aria-labelledby="results-title" id="results">
+      <div class="panel-head">
+        <p class="eyebrow">Resultado</p>
+        <h2 id="results-title">Tu cotización</h2>
+        <p class="lede" id="r-cliente" hidden></p>
+      </div>
+
+      <!-- Ficha de datos del crédito (estilo carátula) -->
+      <div class="ficha" id="ficha" aria-label="Datos del crédito">
+        <div class="ficha-title">Datos del crédito</div>
+        <dl class="ficha-grid">
+          <div class="ficha-row"><dt>Monto autorizado</dt><dd id="f-monto">—</dd></div>
+          <div class="ficha-row"><dt>Comisión por apertura (con IVA)</dt><dd id="f-comision">—</dd></div>
+          <div class="ficha-row"><dt>Total a financiar</dt><dd id="f-total">—</dd></div>
+          <div class="ficha-row"><dt>Plazo del crédito</dt><dd id="f-plazo">—</dd></div>
+          <div class="ficha-row"><dt>Tasa de interés anual</dt><dd id="f-tasa">—</dd></div>
+          <div class="ficha-row"><dt>Pago por mil</dt><dd id="f-pagomil">—</dd></div>
+          <div class="ficha-row ficha-row--hi"><dt>CAT (Costo Anual Total)</dt><dd id="f-cat">—</dd></div>
+        </dl>
+        <p class="ficha-note">La tasa es de referencia; se otorga con base en evaluación crediticia. CAT aproximado, sin fines comparativos oficiales.</p>
+      </div>
+
+      <div class="summary" id="summary">
+        <article class="stat stat--hero">
+          <span class="stat-label">Pago mensual promedio</span>
+          <span class="stat-value" id="r-pago-prom">—</span>
+          <span class="stat-foot">Primer pago <em id="r-pago-primero">—</em> · Último <em id="r-pago-ultimo">—</em></span>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Total a pagar</span>
+          <span class="stat-value" id="r-total">—</span>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Total intereses</span>
+          <span class="stat-value" id="r-intereses">—</span>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Total IVA</span>
+          <span class="stat-value" id="r-iva">—</span>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Total a financiar</span>
+          <span class="stat-value" id="r-financiar">—</span>
+        </article>
+        <article class="stat">
+          <span class="stat-label">CAT aproximado</span>
+          <span class="stat-value" id="r-cat">—</span>
+          <span class="stat-foot">Solo informativo</span>
+        </article>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <h3>Evolución del crédito</h3>
+          <div class="legend">
+            <span class="legend-item"><i class="dot dot--saldo"></i>Saldo insoluto</span>
+            <span class="legend-item"><i class="dot dot--capital"></i>Capital</span>
+            <span class="legend-item"><i class="dot dot--interes"></i>Interés + IVA</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="grafica" height="220"></canvas>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-head">
+          <div>
+            <h3>Tabla de amortización</h3>
+            <span class="table-hint">Captura un <strong>prepago</strong> en cualquier mes para abonar a capital y ver cómo se reduce tu deuda.</span>
+          </div>
+          <span class="badge" id="r-plazo-badge">—</span>
+        </div>
+        <div class="table-scroll">
+          <table id="tabla-amortizacion">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Saldo de capital</th>
+                <th>Pago a capital</th>
+                <th>Interés ordinario</th>
+                <th>Pago fijo mensual</th>
+                <th>IVA interés</th>
+                <th>Pago mensual total</th>
+                <th>Prepagos</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Cifras estimadas con fines de simulación. La tasa final se otorga con base en evaluación crediticia.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
