@@ -42,7 +42,7 @@ Abre `index.html` en el navegador, o levanta un servidor estático:
 
 ```bash
 python -m http.server 5500
-# visita http://localhost:5500
+# visita http://localhost:5500/simulador-credito-personal/
 ```
 
 ## Control de versiones (Conventional Commits)
